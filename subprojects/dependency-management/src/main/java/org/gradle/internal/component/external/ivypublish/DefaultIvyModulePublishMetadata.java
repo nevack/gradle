@@ -33,7 +33,6 @@ import org.gradle.internal.component.external.model.ImmutableCapabilities;
 import org.gradle.internal.component.external.model.ModuleComponentArtifactIdentifier;
 import org.gradle.internal.component.local.model.BuildableLocalConfigurationMetadata;
 import org.gradle.internal.component.local.model.LocalFileDependencyMetadata;
-import org.gradle.internal.component.model.DefaultIvyArtifactName;
 import org.gradle.internal.component.model.ExcludeMetadata;
 import org.gradle.internal.component.model.IvyArtifactName;
 import org.gradle.internal.component.model.LocalOriginDependencyMetadata;
@@ -143,7 +142,7 @@ public class DefaultIvyModulePublishMetadata implements IvyModulePublishMetadata
     }
 
     public void addArtifact(String configuration, PublishArtifact artifact) {
-        DefaultIvyArtifactName ivyName = DefaultIvyArtifactName.forPublishArtifact(artifact);
+        IvyArtifactName ivyName = IvyArtifactName.forPublishArtifact(artifact);
         DefaultIvyModuleArtifactPublishMetadata ivyArtifact = getOrCreate(ivyName);
         ivyArtifact.setFile(artifact.getFile());
         ivyArtifact.addConfiguration(configuration);
