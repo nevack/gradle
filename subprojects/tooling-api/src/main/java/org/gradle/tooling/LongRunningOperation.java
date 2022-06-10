@@ -15,6 +15,7 @@
  */
 package org.gradle.tooling;
 
+import org.gradle.api.Incubating;
 import org.gradle.tooling.events.OperationType;
 
 import javax.annotation.Nullable;
@@ -119,6 +120,21 @@ public interface LongRunningOperation {
      * @since 5.0
      */
     LongRunningOperation addJvmArguments(String... jvmArguments);
+
+    /**
+     * Sets additional system properties for the build.
+     * <p>
+     * This method has "setter" behavior, so the last invocation will overwrite previously set values.
+     * <p>
+     * Note that there are system properties, like {@code file.encoding}, that Gradle considers immutable for the build. Immutable system properties cannot be modified
+     * with this method. The complete list of immutable properties depends on the target Gradle version. See the {@code org.gradle.process.internal.JvmOptions} class for the details.
+     *
+     * @param systemProperties the system properties add to the Gradle process
+     * @return this
+     * @since 7.6
+     */
+    @Incubating
+    LongRunningOperation withSystemProperties(Map<String, String> systemProperties);
 
     /**
      * Appends Java VM arguments to the existing list.
