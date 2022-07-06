@@ -16,6 +16,8 @@
 
 package org.gradle.wrapper;
 
+import org.gradle.util.internal.CacheDirUtil;
+
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
@@ -99,6 +101,9 @@ public class Install {
                     logger.log("Reason: " + e.getMessage());
                     throw e;
                 }
+
+                // Mark the cache directory here, after we've made the folder.
+                CacheDirUtil.markAsCacheDirectory(distDir.getParentFile());
 
                 InstallCheck installCheck = verifyDistributionRoot(distDir, safeDistributionUrl.toString());
                 if (installCheck.isVerified()) {
