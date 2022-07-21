@@ -18,7 +18,6 @@ import com.gradle.scan.plugin.BuildScanExtension
 import gradlebuild.basics.BuildEnvironment.isCiServer
 import gradlebuild.basics.BuildEnvironment.isCodeQl
 import gradlebuild.basics.BuildEnvironment.isGhActions
-import gradlebuild.basics.BuildEnvironment.isTeamCity
 import gradlebuild.basics.BuildEnvironment.isTravis
 import gradlebuild.basics.buildBranch
 import gradlebuild.basics.environmentVariable
@@ -26,6 +25,7 @@ import gradlebuild.basics.kotlindsl.execAndGetStdout
 import gradlebuild.basics.logicalBranch
 import gradlebuild.basics.predictiveTestSelectionEnabled
 import gradlebuild.basics.testDistributionEnabled
+import gradlebuild.buildscan.tasks.CodeQualityIssuesExtension
 import gradlebuild.buildscan.tasks.ExtractCheckstyleBuildScanData
 import gradlebuild.buildscan.tasks.ExtractCodeNarcBuildScanData
 import org.gradle.api.internal.BuildType
@@ -42,6 +42,7 @@ import org.gradle.kotlin.dsl.support.serviceOf
 import org.gradle.launcher.exec.RunBuildBuildOperationType
 import java.net.InetAddress
 import java.net.URLEncoder
+import java.util.concurrent.CopyOnWriteArrayList
 
 plugins {
     id("gradlebuild.cache-miss-monitor")
@@ -82,15 +83,19 @@ if ((project.gradle as GradleInternal).services.get(BuildType::class.java) != Bu
     buildScan?.tag("SYNC")
 }
 
+val failedCodeQualityTaskPaths: MutableList<String> = CopyOnWriteArrayList()
+
 fun extractCheckstyleAndCodenarcData() {
     val extractCheckstyleBuildScanData by tasks.registering(ExtractCheckstyleBuildScanData::class) {
         rootDir.set(layout.projectDirectory)
         buildScanExt = buildScan
+        failedTaskPaths = failedCodeQualityTaskPaths
     }
 
     val extractCodeNarcBuildScanData by tasks.registering(ExtractCodeNarcBuildScanData::class) {
         rootDir.set(layout.projectDirectory)
         buildScanExt = buildScan
+        failedTaskPaths = failedCodeQualityTaskPaths
     }
 
     allprojects {
@@ -134,10 +139,14 @@ fun Project.extractCiData() {
             tag("CODEQL")
         }
     }
-    if (isTeamCity && !isKillLeakingProcessesStep()) {
+    if (!isKillLeakingProcessesStep()) {
         buildScan {
+            buildFinished {  }
             buildScanPublished {
                 println("##teamcity[buildStatus text='{build.status.text}: ${this.buildScanUri}']")
+                failedCodeQualityTaskPaths.forEach {
+                    println("##teamcity[buildProblem description='Checkstyle error: ${this.buildScanUri}/console-log?task=$it']")
+                }
             }
         }
     }

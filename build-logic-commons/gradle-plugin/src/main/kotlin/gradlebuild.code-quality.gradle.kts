@@ -79,6 +79,7 @@ plugins.withType<GroovyBasePlugin> {
 
 codenarc {
     config = configFile("codenarc.xml")
+//    reportFormat = "console"
 }
 
 tasks.withType<CodeNarc>().configureEach {

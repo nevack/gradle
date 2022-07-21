@@ -17,6 +17,7 @@
 package org.gradle.api
 
 import org.junit.Test
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.Assert.assertEquals;
 

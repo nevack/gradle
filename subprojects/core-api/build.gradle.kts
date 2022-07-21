@@ -4,6 +4,10 @@ plugins {
 
 description = "Public and internal 'core' Gradle APIs that are required by other subprojects"
 
+//extensions.getByType(CodeNarcExtension::class.java).reportFormat = "html"
+
+println("format: ${extensions.getByType(CodeNarcExtension::class.java).reportFormat}")
+
 dependencies {
     api(project(":process-services"))
 

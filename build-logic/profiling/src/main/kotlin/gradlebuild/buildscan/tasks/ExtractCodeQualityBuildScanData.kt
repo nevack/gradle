@@ -43,6 +43,10 @@ abstract class AbstractExtractCodeQualityBuildScanData : DefaultTask() {
     internal
     var buildScanExt: BuildScanExtension? = null
 
+    @get:Internal
+    internal
+    var failedTaskPaths: MutableList<String>? = null
+
     init {
         doNotTrackState("Adds build scan values")
     }
@@ -53,26 +57,32 @@ abstract class AbstractExtractCodeQualityBuildScanData : DefaultTask() {
         val basePath = rootDir.get().asFile
         xmlOutputs.files.filter { it.exists() }.forEach { xmlFile ->
             extractIssuesFrom(xmlFile, basePath).forEach { issue ->
-                buildScanExt?.value(buildScanValueName, issue)
+                buildScanExt?.value("$toolName Issue", issue)
             }
         }
     }
 
     @get:Internal
     protected
-    abstract val buildScanValueName: String
+    abstract val toolName: String
 
     protected
     abstract fun extractIssuesFrom(xmlFile: File, basePath: File): List<String>
 }
 
 
+abstract class CodeQualityIssuesExtension {
+    val failedTaskPaths: MutableList<String> = mutableListOf()
+}
+
+
 @DisableCachingByDefault(because = "Does not produce cacheable outputs")
 abstract class ExtractCheckstyleBuildScanData : AbstractExtractCodeQualityBuildScanData() {
 
-    override val buildScanValueName: String = "Checkstyle Issue"
+    override val toolName: String = "Checkstyle"
 
     override fun extractIssuesFrom(xmlFile: File, basePath: File): List<String> {
+        failedTaskPaths!!.add(":core-api:checkstyleMain")
         val checkstyle = Jsoup.parse(xmlFile.readText(), "", Parser.xmlParser())
         return checkstyle.getElementsByTag("file").flatMap { file ->
             file.getElementsByTag("error").map { error ->
@@ -87,7 +97,7 @@ abstract class ExtractCheckstyleBuildScanData : AbstractExtractCodeQualityBuildS
 @DisableCachingByDefault(because = "Does not produce cacheable outputs")
 abstract class ExtractCodeNarcBuildScanData : AbstractExtractCodeQualityBuildScanData() {
 
-    override val buildScanValueName: String = "CodeNarc Issue"
+    override val toolName: String = "CodeNarc"
 
     override fun extractIssuesFrom(xmlFile: File, basePath: File): List<String> {
         val codenarc = Jsoup.parse(xmlFile.readText(), "", Parser.xmlParser())
