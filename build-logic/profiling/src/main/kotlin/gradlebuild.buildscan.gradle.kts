@@ -137,7 +137,7 @@ fun Project.extractCiData() {
     if (isTeamCity && !isKillLeakingProcessesStep()) {
         buildScan {
             buildScanPublished {
-                println("##teamcity[buildStatus text='{build.status.text}: ${this.buildScanUri}']")
+                println("##teamcity[progressMessage '${this.buildScanUri}']")
             }
         }
     }
