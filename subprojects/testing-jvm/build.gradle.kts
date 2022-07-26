@@ -31,6 +31,7 @@ dependencies {
     implementation(project(":platform-jvm"))
     implementation(project(":language-java"))
     implementation(project(":testing-base"))
+    implementation(project(":workers"))
 
     implementation(libs.slf4jApi)
     implementation(libs.groovy)
