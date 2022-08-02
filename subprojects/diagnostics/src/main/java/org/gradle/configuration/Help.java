@@ -37,6 +37,13 @@ import static org.gradle.internal.logging.text.StyledTextOutput.Style.UserInput;
 public class Help extends DefaultTask {
     private String taskPath;
 
+    {
+        doNotCacheConfigurationIf(
+            "--task requires access to the Gradle model",
+            task -> ((Help) task).taskPath != null
+        );
+    }
+
     @Inject
     protected StyledTextOutputFactory getTextOutputFactory() {
         throw new UnsupportedOperationException();
