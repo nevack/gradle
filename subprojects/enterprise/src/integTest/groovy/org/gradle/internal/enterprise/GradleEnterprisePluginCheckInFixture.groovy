@@ -140,6 +140,9 @@ class GradleEnterprisePluginCheckInFixture {
 
                             $GradleEnterprisePluginEndOfBuildListener.name getEndOfBuildListener() {
                                 return { $GradleEnterprisePluginEndOfBuildListener.BuildResult.name buildResult ->
+                                    println "gradleEnterprisePlugin.endOfBuild.backgroundJobExecutor.shutdown = started"
+                                    requiredServices.backgroundJobExecutor.shutdown()
+                                    println "gradleEnterprisePlugin.endOfBuild.backgroundJobExecutor.shutdown = completed"
                                     println "gradleEnterprisePlugin.endOfBuild.buildResult.failure = \$buildResult.failure"
                                     if (System.getProperty("build-listener-failure") != null) {
                                         throw new RuntimeException("broken")
@@ -209,4 +212,17 @@ class GradleEnterprisePluginCheckInFixture {
         assert !output.contains("gradleEnterprisePlugin.apply.runtimeVersion = $runtimeVersion")
     }
 
+    void assertBackgroundJobFailureCallbackInvokedAtShutdown(String output, String expectedFailureCallbackOutput) {
+        assert output.contains([
+            "gradleEnterprisePlugin.endOfBuild.backgroundJobExecutor.shutdown = started",
+            expectedFailureCallbackOutput,
+            "gradleEnterprisePlugin.endOfBuild.backgroundJobExecutor.shutdown = completed"
+        ].join("\n"))
+    }
+
+    void assertBackgroundJobExecutedBeforeShutdownCompleted(String output, String expectedJobOutput) {
+        def jobOutputPosition = output.indexOf(expectedJobOutput)
+        assert jobOutputPosition >= 0 : "cannot find $expectedJobOutput"
+        assert jobOutputPosition < output.indexOf("gradleEnterprisePlugin.endOfBuild.backgroundJobExecutor.shutdown = completed")
+    }
 }
