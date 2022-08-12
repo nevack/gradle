@@ -421,16 +421,6 @@ enum class SpecificBuild {
         override fun create(model: CIBuildModel, stage: Stage): BaseGradleBuildType {
             return FlakyTestQuarantine(model, stage, Os.WINDOWS)
         }
-    },
-    SmokeTestsExperimentalJDK {
-        override fun create(model: CIBuildModel, stage: Stage): BaseGradleBuildType {
-            return SmokeTests(model, stage, JvmCategory.EXPERIMENTAL_VERSION)
-        }
-    },
-    ConfigCacheSmokeTestsExperimentalJDK {
-        override fun create(model: CIBuildModel, stage: Stage): BaseGradleBuildType {
-            return SmokeTests(model, stage, JvmCategory.EXPERIMENTAL_VERSION, "configCacheSmokeTest")
-        }
     };
 
     abstract fun create(model: CIBuildModel, stage: Stage): BaseGradleBuildType
