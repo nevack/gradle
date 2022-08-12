@@ -44,7 +44,6 @@ class FunctionalTest(
         arch = testCoverage.arch,
         extraParameters = (
             listOf(functionalTestExtraParameters(functionalTestTag, testCoverage.os, testCoverage.arch, testCoverage.testJvmVersion.major.toString(), testCoverage.vendor.name)) +
-                (if (enableTestDistribution) "-DenableTestDistribution=%enableTestDistribution% -DtestDistributionPartitionSizeInSeconds=%testDistributionPartitionSizeInSeconds%" else "") +
                 "-PflakyTests=${determineFlakyTestStrategy(stage)}" +
                 extraParameters
             ).filter { it.isNotBlank() }.joinToString(separator = " "),
