@@ -51,7 +51,6 @@ fun performanceTestCommandLine(
     "$task${if (extraParameters.isEmpty()) "" else " $extraParameters"}",
     "-PperformanceBaselines=$baselines",
     "-PtestJavaVersion=$testJavaVersion",
-    "-PtestJavaVendor=$testJavaVendor",
     "-PautoDownloadAndroidStudio=true",
     "-PrunAndroidStudioInHeadlessMode=true",
     "-Porg.gradle.java.installations.auto-download=false",
