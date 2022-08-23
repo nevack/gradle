@@ -15,8 +15,10 @@
  */
 package org.gradle.api.internal.artifacts.ivyservice.ivyresolve;
 
+import com.google.common.collect.ImmutableSet;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.artifact.ArtifactSet;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.artifact.ArtifactSetFactory;
+import org.gradle.api.internal.artifacts.ivyservice.resolveengine.artifact.ResolvedVariant;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.excludes.specs.ExcludeSpec;
 import org.gradle.api.internal.artifacts.type.ArtifactTypeRegistry;
 import org.gradle.api.internal.attributes.ImmutableAttributes;
@@ -70,7 +72,18 @@ class RepositoryChainArtifactResolver implements ArtifactResolver, OriginArtifac
             return NO_ARTIFACTS;
         }
         ModuleComponentRepository sourceRepository = findSourceRepository(component.getSources());
-        return ArtifactSetFactory.createFromVariantMetadata(component.getId(), component.getModuleVersionId(), component.getSources(), exclusions, availableVariants, availableVariants, component.getAttributesSchema(), this, sourceRepository.getArtifactCache(), artifactTypeRegistry, overriddenAttributes, calculatedValueContainerFactory);
+        ImmutableSet.Builder<ResolvedVariant> legacyResolvedVariants = ImmutableSet.builder();
+        for (VariantResolveMetadata variant : availableVariants) {
+            ResolvedVariant resolvedVariant = ArtifactSetFactory.toResolvedVariant(variant, component.getModuleVersionId(), component.getSources(), exclusions, this, sourceRepository.getArtifactCache(), artifactTypeRegistry, calculatedValueContainerFactory);
+            legacyResolvedVariants.add(resolvedVariant);
+        }
+        ImmutableSet.Builder<ResolvedVariant> allResolvedVariants = ImmutableSet.builder();
+        for (VariantResolveMetadata variant : availableVariants) {
+            ResolvedVariant resolvedVariant = ArtifactSetFactory.toResolvedVariant(variant, component.getModuleVersionId(), component.getSources(), exclusions, this, sourceRepository.getArtifactCache(), artifactTypeRegistry, calculatedValueContainerFactory);
+            allResolvedVariants.add(resolvedVariant);
+        }
+
+        return ArtifactSetFactory.createFromVariantMetadata(component.getId(), legacyResolvedVariants.build(), allResolvedVariants.build(), component.getAttributesSchema(), overriddenAttributes);
     }
 
     @Override

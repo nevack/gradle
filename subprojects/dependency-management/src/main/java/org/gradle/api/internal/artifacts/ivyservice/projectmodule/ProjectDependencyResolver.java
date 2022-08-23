@@ -15,6 +15,7 @@
  */
 package org.gradle.api.internal.artifacts.ivyservice.projectmodule;
 
+import com.google.common.collect.ImmutableSet;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentSelector;
@@ -23,6 +24,7 @@ import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.ComponentResolver
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionSelector;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.artifact.ArtifactSet;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.artifact.ArtifactSetFactory;
+import org.gradle.api.internal.artifacts.ivyservice.resolveengine.artifact.ResolvedVariant;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.excludes.specs.ExcludeSpec;
 import org.gradle.api.internal.artifacts.type.ArtifactTypeRegistry;
 import org.gradle.api.internal.attributes.ImmutableAttributes;
@@ -148,7 +150,17 @@ public class ProjectDependencyResolver implements ComponentMetaDataResolver, Dep
     @Override
     public ArtifactSet resolveArtifacts(final ComponentResolveMetadata component, Set<? extends VariantResolveMetadata> availableVariants, final ExcludeSpec exclusions, final ImmutableAttributes overriddenAttributes) {
         if (isProjectModule(component.getId())) {
-            return ArtifactSetFactory.createFromVariantMetadata(component.getId(), component.getModuleVersionId(), component.getSources(), exclusions, availableVariants, availableVariants, component.getAttributesSchema(), this, cache.getAllProjectArtifacts(), artifactTypeRegistry, overriddenAttributes, calculatedValueContainerFactory);
+            ImmutableSet.Builder<ResolvedVariant> legacyResolvedVariants = ImmutableSet.builder();
+            for (VariantResolveMetadata variant : availableVariants) {
+                ResolvedVariant resolvedVariant = ArtifactSetFactory.toResolvedVariant(variant, component.getModuleVersionId(), component.getSources(), exclusions, this, cache.getAllProjectArtifacts(), artifactTypeRegistry, calculatedValueContainerFactory);
+                legacyResolvedVariants.add(resolvedVariant);
+            }
+            ImmutableSet.Builder<ResolvedVariant> allResolvedVariants = ImmutableSet.builder();
+            for (VariantResolveMetadata variant : availableVariants) {
+                ResolvedVariant resolvedVariant = ArtifactSetFactory.toResolvedVariant(variant, component.getModuleVersionId(), component.getSources(), exclusions, this, cache.getAllProjectArtifacts(), artifactTypeRegistry, calculatedValueContainerFactory);
+                allResolvedVariants.add(resolvedVariant);
+            }
+            return ArtifactSetFactory.createFromVariantMetadata(component.getId(), legacyResolvedVariants.build(), allResolvedVariants.build(), component.getAttributesSchema(), overriddenAttributes);
         } else {
             return null;
         }
