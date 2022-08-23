@@ -847,9 +847,6 @@ tasks.named("docsTest") { task ->
                 "snippet-java-fixtures_groovy_javaTestFixtures.sample",
                 "snippet-java-fixtures_kotlin_javaTestFixtures.sample",
 
-                "snippet-java-toolchain-filters_groovy_toolchainFilters.sample",
-                "snippet-java-toolchain-filters_kotlin_toolchainFilters.sample",
-
                 "snippet-kotlin-dsl-multi-project-build_kotlin_build.sample",
 
                 "snippet-providers-implicit-task-input-dependency_groovy_implicitTaskInputDependency.sample",
