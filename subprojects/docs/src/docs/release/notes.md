@@ -151,6 +151,7 @@ The [configuration cache](userguide/configuration_cache.html) improves build tim
 
 The `dependencies`, `buildEnvironment`, `projects` and `properties` tasks are now compatible with the configuration cache.
 
+The [Maven Publish Plugin](userguide/publishing_maven.html) is now compatible with the configuration cache. Note that when using credentials, the configuration cache requires [safe (empty) credential containers](userguide/configuration_cache.html#config_cache:requirements:safe_credentials).
 
 #### Clarified the ordering of disambiguation rule checks in `resolvableConfigurations` reports  
 
