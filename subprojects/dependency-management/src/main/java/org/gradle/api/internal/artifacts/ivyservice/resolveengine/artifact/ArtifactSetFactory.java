@@ -70,7 +70,7 @@ public class ArtifactSetFactory {
         ImmutableSet.Builder<ResolvedVariant> allResolvedVariants = ImmutableSet.builder();
         for (VariantResolveMetadata variant : allVariants) {
             ResolvedVariant resolvedVariant = toResolvedVariant(variant, ownerId, moduleSources, exclusions, artifactResolver, allResolvedArtifacts, artifactTypeRegistry, calculatedValueContainerFactory);
-            legacyResolvedVariants.add(resolvedVariant);
+            allResolvedVariants.add(resolvedVariant);
         }
         return new DefaultArtifactSet(componentIdentifier, schema, selectionAttributes, allResolvedVariants.build(), legacyResolvedVariants.build());
     }
