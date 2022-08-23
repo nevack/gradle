@@ -15,10 +15,11 @@
  */
 package org.gradle.api.internal.artifacts.ivyservice.moduleconverter;
 
+import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.internal.artifacts.configurations.ConfigurationInternal;
 import org.gradle.internal.component.local.model.BuildableLocalComponentMetadata;
 import org.gradle.internal.component.local.model.BuildableLocalConfigurationMetadata;
 
 public interface LocalComponentMetadataBuilder {
-    BuildableLocalConfigurationMetadata addConfiguration(BuildableLocalComponentMetadata metaData, ConfigurationInternal configuration);
+    BuildableLocalConfigurationMetadata addConfiguration(BuildableLocalComponentMetadata metaData, ModuleVersionIdentifier moduleVersionIdentifier, ConfigurationInternal configuration);
 }

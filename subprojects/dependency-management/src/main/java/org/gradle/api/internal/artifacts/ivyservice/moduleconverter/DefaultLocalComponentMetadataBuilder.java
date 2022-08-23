@@ -17,7 +17,9 @@ package org.gradle.api.internal.artifacts.ivyservice.moduleconverter;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.PublishArtifact;
+import org.gradle.api.capabilities.CapabilitiesMetadata;
 import org.gradle.api.capabilities.Capability;
 import org.gradle.api.internal.artifacts.configurations.ConfigurationInternal;
 import org.gradle.api.internal.artifacts.configurations.Configurations;
@@ -25,6 +27,7 @@ import org.gradle.api.internal.artifacts.ivyservice.moduleconverter.dependencies
 import org.gradle.api.internal.attributes.ImmutableAttributes;
 import org.gradle.internal.DisplayName;
 import org.gradle.internal.component.external.model.ImmutableCapabilities;
+import org.gradle.internal.component.external.model.ImmutableCapability;
 import org.gradle.internal.component.local.model.BuildableLocalComponentMetadata;
 import org.gradle.internal.component.local.model.BuildableLocalConfigurationMetadata;
 import org.gradle.internal.component.model.ComponentConfigurationIdentifier;
@@ -40,7 +43,7 @@ public class DefaultLocalComponentMetadataBuilder implements LocalComponentMetad
     }
 
     @Override
-    public BuildableLocalConfigurationMetadata addConfiguration(BuildableLocalComponentMetadata metaData, ConfigurationInternal configuration) {
+    public BuildableLocalConfigurationMetadata addConfiguration(BuildableLocalComponentMetadata metaData, ModuleVersionIdentifier moduleVersionIdentifier, ConfigurationInternal configuration) {
         BuildableLocalConfigurationMetadata configurationMetadata = createConfiguration(metaData, configuration);
 
         metaData.addDependenciesAndExcludesForConfiguration(configuration, configurationMetadataBuilder);
@@ -54,15 +57,23 @@ public class DefaultLocalComponentMetadataBuilder implements LocalComponentMetad
 
             @Override
             public void visitOwnVariant(DisplayName displayName, ImmutableAttributes attributes, Collection<? extends Capability> capabilities, Collection<? extends PublishArtifact> artifacts) {
-                configurationMetadata.addVariant(configuration.getName(), configurationIdentifier, displayName, attributes, ImmutableCapabilities.of(capabilities), artifacts);
+                configurationMetadata.addVariant(configuration.getName(), configurationIdentifier, displayName, attributes, withImplicitCapability(capabilities, moduleVersionIdentifier), artifacts);
             }
 
             @Override
             public void visitChildVariant(String name, DisplayName displayName, ImmutableAttributes attributes, Collection<? extends Capability> capabilities, Collection<? extends PublishArtifact> artifacts) {
-                configurationMetadata.addVariant(configuration.getName() + "-" + name, new NestedVariantIdentifier(configurationIdentifier, name), displayName, attributes, ImmutableCapabilities.of(capabilities), artifacts);
+                configurationMetadata.addVariant(configuration.getName() + "-" + name, new NestedVariantIdentifier(configurationIdentifier, name), displayName, attributes, withImplicitCapability(capabilities, moduleVersionIdentifier), artifacts);
             }
         });
         return configurationMetadata;
+    }
+
+    private static ImmutableCapabilities withImplicitCapability(Collection<? extends Capability> capabilities, ModuleVersionIdentifier identifier) {
+        if (capabilities.isEmpty()) {
+            return ImmutableCapabilities.of(ImmutableCapability.defaultCapabilityForComponent(identifier));
+        } else {
+            return ImmutableCapabilities.copyAsImmutable(capabilities);
+        }
     }
 
     private BuildableLocalConfigurationMetadata createConfiguration(BuildableLocalComponentMetadata metaData,

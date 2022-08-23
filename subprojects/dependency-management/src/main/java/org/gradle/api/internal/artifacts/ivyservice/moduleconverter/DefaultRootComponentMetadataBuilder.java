@@ -109,7 +109,7 @@ public class DefaultRootComponentMetadataBuilder implements RootComponentMetadat
     }
 
     private void addConfiguration(DefaultLocalComponentMetadata metadata, ConfigurationInternal configuration) {
-        BuildableLocalConfigurationMetadata buildableLocalConfigurationMetadata = localComponentMetadataBuilder.addConfiguration(metadata, configuration);
+        BuildableLocalConfigurationMetadata buildableLocalConfigurationMetadata = localComponentMetadataBuilder.addConfiguration(metadata, metadata.getModuleVersionId(), configuration);
         if (configuration.getResolutionStrategy().isDependencyLockingEnabled()) {
             buildableLocalConfigurationMetadata.enableLocking();
         }

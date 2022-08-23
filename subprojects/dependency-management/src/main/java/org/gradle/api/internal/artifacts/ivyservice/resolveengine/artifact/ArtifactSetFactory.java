@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableSet;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.component.ComponentArtifactIdentifier;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
-import org.gradle.api.capabilities.CapabilitiesMetadata;
 import org.gradle.api.internal.artifacts.DefaultResolvableArtifact;
 import org.gradle.api.internal.artifacts.ivyservice.projectmodule.ProjectArtifactResolver;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.excludes.specs.ExcludeSpec;
@@ -31,7 +30,6 @@ import org.gradle.api.internal.attributes.ImmutableAttributes;
 import org.gradle.api.internal.tasks.NodeExecutionContext;
 import org.gradle.internal.Describables;
 import org.gradle.internal.component.external.model.ImmutableCapabilities;
-import org.gradle.internal.component.external.model.ImmutableCapability;
 import org.gradle.internal.component.model.ComponentArtifactMetadata;
 import org.gradle.internal.component.model.DefaultVariantMetadata;
 import org.gradle.internal.component.model.ModuleSources;
@@ -109,7 +107,7 @@ public class ArtifactSetFactory {
             identifier = null;
         }
 
-        return ArtifactBackedResolvedVariant.create(identifier, variant.asDescribable(), variantAttributes, withImplicitCapability(variant, ownerId), supplyLazilyResolvedArtifacts(ownerId, moduleSources, artifactsToResolve, artifactResolver, allResolvedArtifacts, calculatedValueContainerFactory));
+        return ArtifactBackedResolvedVariant.create(identifier, variant.asDescribable(), variantAttributes, variant.getCapabilities(), supplyLazilyResolvedArtifacts(ownerId, moduleSources, artifactsToResolve, artifactResolver, allResolvedArtifacts, calculatedValueContainerFactory));
     }
 
     private static Supplier<Collection<? extends ResolvableArtifact>> supplyLazilyResolvedArtifacts(ModuleVersionIdentifier ownerId, ModuleSources moduleSources, List<? extends ComponentArtifactMetadata> artifacts, ArtifactResolver artifactResolver, Map<ComponentArtifactIdentifier, ResolvableArtifact> allResolvedArtifacts, CalculatedValueContainerFactory calculatedValueContainerFactory) {
@@ -141,15 +139,6 @@ public class ArtifactSetFactory {
             }
             return resolvedArtifacts.build();
         };
-    }
-
-    private static CapabilitiesMetadata withImplicitCapability(VariantResolveMetadata variant, ModuleVersionIdentifier identifier) {
-        CapabilitiesMetadata capabilities = variant.getCapabilities();
-        if (capabilities.getCapabilities().isEmpty()) {
-            return ImmutableCapabilities.of(ImmutableCapability.defaultCapabilityForComponent(identifier));
-        } else {
-            return ImmutableCapabilities.copyAsImmutable(capabilities.getCapabilities());
-        }
     }
 
     private static class SingleArtifactVariantIdentifier implements VariantResolveMetadata.Identifier {
