@@ -25,6 +25,7 @@ import org.gradle.execution.plan.BuildWorkPlan;
 import org.gradle.execution.plan.LocalTaskNode;
 import org.gradle.execution.plan.TaskNode;
 import org.gradle.execution.plan.TaskNodeFactory;
+import org.gradle.util.Path;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -40,6 +41,7 @@ public class DefaultBuildWorkGraphController implements BuildWorkGraphController
     private final Map<String, DefaultExportedTaskNode> nodesByPath = new ConcurrentHashMap<>();
     private final Object lock = new Object();
     private DefaultBuildWorkGraph current;
+    private Thread currentGraphOwner;
 
     public DefaultBuildWorkGraphController(TaskNodeFactory taskNodeFactory, BuildLifecycleController controller) {
         this.taskNodeFactory = taskNodeFactory;
@@ -59,9 +61,17 @@ public class DefaultBuildWorkGraphController implements BuildWorkGraphController
     public BuildWorkGraph newWorkGraph() {
         synchronized (lock) {
             if (current != null) {
-                throw new IllegalStateException("This build's work graph is currently in use by another thread.");
+                Path path = controller.getGradle().getIdentityPath();
+                if (currentGraphOwner == Thread.currentThread()) {
+                    throw new IllegalStateException(String.format(String.format("The work graph of build %s is currently in use by this thread (%s).", path, currentGraphOwner)));
+                } else {
+                    RuntimeException ownerThreadStackTrace = new RuntimeException(String.format("Stack trace of owner thread %s", currentGraphOwner));
+                    ownerThreadStackTrace.setStackTrace(currentGraphOwner.getStackTrace());
+                    throw new IllegalStateException(String.format("The work graph of build %s is currently in use by thread (%s) (but required by thread %s).", path, currentGraphOwner, Thread.currentThread()), ownerThreadStackTrace);
+                }
             }
             current = new DefaultBuildWorkGraph();
+            currentGraphOwner = Thread.currentThread();
             return current;
         }
     }
@@ -160,6 +170,7 @@ public class DefaultBuildWorkGraphController implements BuildWorkGraphController
             } finally {
                 synchronized (lock) {
                     current = null;
+                    currentGraphOwner = null;
                 }
             }
         }
