@@ -1070,7 +1070,7 @@ class DefaultConfigurationSpec extends Specification {
         localComponentsResult.resolvedProjectConfigurations >> []
         def visitedArtifactSet = Mock(VisitedArtifactSet)
 
-        _ * visitedArtifactSet.select(_, _, _, _) >> Stub(SelectedArtifactSet) {
+        _ * visitedArtifactSet.select(_, _, _, _, _) >> Stub(SelectedArtifactSet) {
             collectFiles(_) >> { return it[0] }
         }
 
