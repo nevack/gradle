@@ -16,12 +16,14 @@
 
 package org.gradle.internal.resolve.resolver;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import org.gradle.api.artifacts.component.ComponentArtifactIdentifier;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.artifact.ArtifactSet;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.artifact.ArtifactSetFactory;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.artifact.FileDependencyArtifactSet;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.artifact.ResolvableArtifact;
+import org.gradle.api.internal.artifacts.ivyservice.resolveengine.artifact.ResolvedVariant;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.excludes.simple.DefaultExcludeFactory;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.excludes.specs.ExcludeSpec;
 import org.gradle.api.internal.artifacts.type.ArtifactTypeRegistry;
@@ -60,9 +62,21 @@ public class DefaultArtifactSelector implements ArtifactSelector {
 
     @Override
     public ArtifactSet resolveArtifacts(ComponentResolveMetadata component, Set<? extends VariantResolveMetadata> availableVariants, ExcludeSpec exclusions, ImmutableAttributes overriddenAttributes) {
+        // TODO: using allResolvedArtifacts isn't correct here
+        ImmutableSet.Builder<ResolvedVariant> legacyResolvedVariants = ImmutableSet.builder();
+        for (VariantResolveMetadata variant : availableVariants) {
+            ResolvedVariant resolvedVariant = ArtifactSetFactory.toResolvedVariant(variant, component.getModuleVersionId(), component.getSources(), exclusions, artifactResolver, allResolvedArtifacts, artifactTypeRegistry, calculatedValueContainerFactory);
+            legacyResolvedVariants.add(resolvedVariant);
+        }
+        ImmutableSet.Builder<ResolvedVariant> allResolvedVariants = ImmutableSet.builder();
+        for (VariantResolveMetadata variant : availableVariants) {
+            ResolvedVariant resolvedVariant = ArtifactSetFactory.toResolvedVariant(variant, component.getModuleVersionId(), component.getSources(), exclusions, artifactResolver, allResolvedArtifacts, artifactTypeRegistry, calculatedValueContainerFactory);
+            allResolvedVariants.add(resolvedVariant);
+        }
+
         ArtifactSet artifacts = null;
         for (OriginArtifactSelector selector : selectors) {
-            artifacts = selector.resolveArtifacts(component, availableVariants, exclusions, overriddenAttributes);
+            artifacts = selector.resolveArtifacts(component, allResolvedVariants.build(), legacyResolvedVariants.build(), exclusions, overriddenAttributes);
             if (artifacts != null) {
                 break;
             }
