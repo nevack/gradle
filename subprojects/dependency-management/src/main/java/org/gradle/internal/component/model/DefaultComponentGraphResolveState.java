@@ -62,7 +62,7 @@ public class DefaultComponentGraphResolveState<T extends ComponentResolveMetadat
             } else {
                 allVariants = graphSelectedVariant.getVariants();
             }
-            return artifactSelector.resolveArtifacts(component, graphSelectedVariant.getVariants(), graphSelectedVariant.getVariants(), exclusions, overriddenAttributes);
+            return artifactSelector.resolveArtifacts(component, allVariants, graphSelectedVariant.getVariants(), exclusions, overriddenAttributes);
         }
     }
 }

@@ -30,6 +30,7 @@ import org.gradle.api.internal.tasks.NodeExecutionContext;
 import org.gradle.internal.Describables;
 import org.gradle.internal.DisplayName;
 import org.gradle.internal.component.external.model.ImmutableCapabilities;
+import org.gradle.internal.component.external.model.ImmutableCapability;
 import org.gradle.internal.component.model.ComponentArtifactMetadata;
 import org.gradle.internal.component.model.ModuleSources;
 import org.gradle.internal.component.model.VariantResolveMetadata;
@@ -61,7 +62,7 @@ public class ArtifactSetFactory {
         if (artifacts.size() == 1) {
             identifier = new SingleArtifactVariantIdentifier(artifacts.iterator().next().getId());
         }
-        ResolvedVariant resolvedVariant = toResolvedVariant(identifier, Describables.of(componentIdentifier), variantAttributes, ImmutableList.copyOf(artifacts), ImmutableCapabilities.EMPTY, ownerId, moduleSources, allResolvedArtifacts, artifactResolver, calculatedValueContainerFactory);
+        ResolvedVariant resolvedVariant = toResolvedVariant(identifier, Describables.of(componentIdentifier), variantAttributes, ImmutableList.copyOf(artifacts), ImmutableCapabilities.of(ImmutableCapability.defaultCapabilityForComponent(ownerId)), ownerId, moduleSources, allResolvedArtifacts, artifactResolver, calculatedValueContainerFactory);
         return new DefaultArtifactSet(componentIdentifier, schema, selectionAttributes, Collections.singleton(resolvedVariant), Collections.singleton(resolvedVariant));
     }
 

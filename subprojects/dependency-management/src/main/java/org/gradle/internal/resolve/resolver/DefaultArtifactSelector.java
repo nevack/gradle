@@ -22,6 +22,7 @@ import com.google.common.collect.Maps;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.component.ComponentArtifactIdentifier;
 import org.gradle.api.capabilities.CapabilitiesMetadata;
+import org.gradle.api.capabilities.Capability;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.artifact.ArtifactSet;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.artifact.ArtifactSetFactory;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.artifact.FileDependencyArtifactSet;
@@ -31,6 +32,8 @@ import org.gradle.api.internal.artifacts.ivyservice.resolveengine.excludes.specs
 import org.gradle.api.internal.artifacts.type.ArtifactTypeRegistry;
 import org.gradle.api.internal.attributes.ImmutableAttributes;
 import org.gradle.internal.DisplayName;
+import org.gradle.internal.component.external.model.ImmutableCapabilities;
+import org.gradle.internal.component.external.model.ImmutableCapability;
 import org.gradle.internal.component.local.model.LocalFileDependencyMetadata;
 import org.gradle.internal.component.model.ComponentArtifactMetadata;
 import org.gradle.internal.component.model.ComponentResolveMetadata;
@@ -113,7 +116,15 @@ public class DefaultArtifactSelector implements ArtifactSelector {
             resolvedIdentifier = identifier;
         }
         ImmutableAttributes attributes = artifactTypeRegistry.mapAttributesFor(variantAttributes, artifacts);
-        return ArtifactSetFactory.toResolvedVariant(resolvedIdentifier, displayName, attributes, artifactsToResolve, capabilities, ownerId, moduleSources, allResolvedArtifacts, artifactResolver, calculatedValueContainerFactory);
+        return ArtifactSetFactory.toResolvedVariant(resolvedIdentifier, displayName, attributes, artifactsToResolve, withImplicitCapability(capabilities.getCapabilities(), ownerId), ownerId, moduleSources, allResolvedArtifacts, artifactResolver, calculatedValueContainerFactory);
+    }
+
+    private static ImmutableCapabilities withImplicitCapability(Collection<? extends Capability> capabilities, ModuleVersionIdentifier identifier) {
+        if (capabilities.isEmpty()) {
+            return ImmutableCapabilities.of(ImmutableCapability.defaultCapabilityForComponent(identifier));
+        } else {
+            return ImmutableCapabilities.copyAsImmutable(capabilities);
+        }
     }
 
     @Override
