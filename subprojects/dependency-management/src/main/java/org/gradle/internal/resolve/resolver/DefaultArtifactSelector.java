@@ -61,22 +61,22 @@ public class DefaultArtifactSelector implements ArtifactSelector {
     }
 
     @Override
-    public ArtifactSet resolveArtifacts(ComponentResolveMetadata component, Set<? extends VariantResolveMetadata> availableVariants, ExcludeSpec exclusions, ImmutableAttributes overriddenAttributes) {
+    public ArtifactSet resolveArtifacts(ComponentResolveMetadata component, Set<? extends VariantResolveMetadata> allVariants, Set<? extends VariantResolveMetadata> legacyVariants, ExcludeSpec exclusions, ImmutableAttributes overriddenAttributes) {
         // TODO: using allResolvedArtifacts isn't correct here
-        ImmutableSet.Builder<ResolvedVariant> legacyResolvedVariants = ImmutableSet.builder();
-        for (VariantResolveMetadata variant : availableVariants) {
-            ResolvedVariant resolvedVariant = ArtifactSetFactory.toResolvedVariant(variant, component.getModuleVersionId(), component.getSources(), exclusions, artifactResolver, allResolvedArtifacts, artifactTypeRegistry, calculatedValueContainerFactory);
-            legacyResolvedVariants.add(resolvedVariant);
-        }
         ImmutableSet.Builder<ResolvedVariant> allResolvedVariants = ImmutableSet.builder();
-        for (VariantResolveMetadata variant : availableVariants) {
+        for (VariantResolveMetadata variant : allVariants) {
             ResolvedVariant resolvedVariant = ArtifactSetFactory.toResolvedVariant(variant, component.getModuleVersionId(), component.getSources(), exclusions, artifactResolver, allResolvedArtifacts, artifactTypeRegistry, calculatedValueContainerFactory);
             allResolvedVariants.add(resolvedVariant);
+        }
+        ImmutableSet.Builder<ResolvedVariant> legacyResolvedVariants = ImmutableSet.builder();
+        for (VariantResolveMetadata variant : legacyVariants) {
+            ResolvedVariant resolvedVariant = ArtifactSetFactory.toResolvedVariant(variant, component.getModuleVersionId(), component.getSources(), exclusions, artifactResolver, allResolvedArtifacts, artifactTypeRegistry, calculatedValueContainerFactory);
+            legacyResolvedVariants.add(resolvedVariant);
         }
 
         ArtifactSet artifacts = null;
         for (OriginArtifactSelector selector : selectors) {
-            artifacts = selector.resolveArtifacts(component, allResolvedVariants.build(), legacyResolvedVariants.build(), exclusions, overriddenAttributes);
+            artifacts = selector.resolveArtifacts(component, legacyResolvedVariants.build(), legacyResolvedVariants.build(), exclusions, overriddenAttributes);
             if (artifacts != null) {
                 break;
             }

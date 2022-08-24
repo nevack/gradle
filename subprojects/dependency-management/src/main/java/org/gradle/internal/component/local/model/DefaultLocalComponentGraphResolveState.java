@@ -16,21 +16,27 @@
 
 package org.gradle.internal.component.local.model;
 
+import com.google.common.collect.ImmutableSet;
 import org.gradle.api.Transformer;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.artifact.ArtifactSet;
+import org.gradle.api.internal.artifacts.ivyservice.resolveengine.artifact.ResolvedVariant;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.excludes.specs.ExcludeSpec;
 import org.gradle.api.internal.attributes.ImmutableAttributes;
 import org.gradle.internal.component.model.AbstractComponentGraphResolveState;
 import org.gradle.internal.component.model.ComponentArtifactMetadata;
+import org.gradle.internal.component.model.ConfigurationMetadata;
 import org.gradle.internal.component.model.IvyArtifactName;
 import org.gradle.internal.component.model.VariantArtifactGraphResolveMetadata;
 import org.gradle.internal.component.model.VariantArtifactResolveState;
 import org.gradle.internal.component.model.VariantGraphResolveMetadata;
+import org.gradle.internal.component.model.VariantResolveMetadata;
 import org.gradle.internal.resolve.resolver.ArtifactSelector;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -62,16 +68,20 @@ public class DefaultLocalComponentGraphResolveState extends AbstractComponentGra
     }
 
     private DefaultLocalVariantArtifactResolveState stateFor(LocalConfigurationMetadata configuration) {
-        return variants.computeIfAbsent(configuration, c -> new DefaultLocalVariantArtifactResolveState(getMetadata(), configuration));
+        return variants.computeIfAbsent(configuration, c -> {
+            return new DefaultLocalVariantArtifactResolveState(getMetadata(), configuration, getMetadata().getVariantsForGraphTraversal().get());
+        });
     }
 
     private static class DefaultLocalVariantArtifactResolveState implements VariantArtifactResolveState, VariantArtifactGraphResolveMetadata {
         private final LocalComponentMetadata component;
         private final LocalConfigurationMetadata graphSelectedVariant;
+        private final List<? extends VariantArtifactGraphResolveMetadata> allVariants;
 
-        public DefaultLocalVariantArtifactResolveState(LocalComponentMetadata component, LocalConfigurationMetadata graphSelectedVariant) {
+        public DefaultLocalVariantArtifactResolveState(LocalComponentMetadata component, LocalConfigurationMetadata graphSelectedVariant, List<? extends VariantArtifactGraphResolveMetadata> allVariants) {
             this.component = component;
             this.graphSelectedVariant = graphSelectedVariant;
+            this.allVariants = allVariants;
         }
 
         @Override
@@ -88,7 +98,7 @@ public class DefaultLocalComponentGraphResolveState extends AbstractComponentGra
         @Override
         public ArtifactSet resolveArtifacts(ArtifactSelector artifactSelector, ExcludeSpec exclusions, ImmutableAttributes overriddenAttributes) {
             graphSelectedVariant.prepareToResolveArtifacts();
-            return artifactSelector.resolveArtifacts(component, graphSelectedVariant.getVariants(), exclusions, overriddenAttributes);
+            return artifactSelector.resolveArtifacts(component, allVariants, graphSelectedVariant.getVariants(), exclusions, overriddenAttributes);
         }
     }
 }
