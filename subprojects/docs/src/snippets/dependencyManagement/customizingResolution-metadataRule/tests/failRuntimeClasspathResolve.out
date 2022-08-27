@@ -3,7 +3,7 @@ Execution failed for task ':failRuntimeClasspathResolve'.
    > Could not resolve org.lwjgl:lwjgl:3.2.3.
      Required by:
          project :
-     > The consumer was configured to find a library for use during runtime compatible with Java 11, packaged as a jar, preferably optimized for standard JVMs, and its dependencies declared externally, as well as attribute 'org.gradle.native.operatingSystem' with value 'windows'. However we cannot choose between the following variants of org.lwjgl:lwjgl:3.2.3:
+      > The consumer was configured to find a library for use during runtime, compatible with Java 11, packaged as a jar, preferably optimized for standard JVMs, and its dependencies declared externally, as well as attribute 'org.gradle.native.operatingSystem' with value 'windows'. However we cannot choose between the following variants of org.lwjgl:lwjgl:3.2.3:
           - natives-windows-runtime
           - natives-windows-x86-runtime
         All of them match the consumer attributes:
