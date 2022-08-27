@@ -77,8 +77,8 @@ class DefaultAttributesSchemaTest extends Specification {
         schema.attribute(attribute)
 
         expect:
-        !schema.mergeWith(EmptySchema.INSTANCE).matchValue(attribute, "a", "b")
-        schema.mergeWith(EmptySchema.INSTANCE).matchValue(attribute, "a", "a")
+        !new DefaultAttributeSelectionSchema(schema).matchValue(attribute, "a", "b")
+        new DefaultAttributeSelectionSchema(schema).matchValue(attribute, "a", "a")
 
         !schema.matcher().isMatching(attribute, "a", "b")
         schema.matcher().isMatching(attribute, "a", "a")
@@ -99,8 +99,8 @@ class DefaultAttributesSchemaTest extends Specification {
         schema.attribute(attribute).compatibilityRules.add(DoNothingRule)
 
         expect:
-        !schema.mergeWith(EmptySchema.INSTANCE).matchValue(attribute, "a", "b")
-        schema.mergeWith(EmptySchema.INSTANCE).matchValue(attribute, "a", "a")
+        !new DefaultAttributeSelectionSchema(schema).matchValue(attribute, "a", "b")
+        new DefaultAttributeSelectionSchema(schema).matchValue(attribute, "a", "a")
 
         !schema.matcher().isMatching(attribute, "a", "b")
         schema.matcher().isMatching(attribute, "a", "a")
@@ -119,7 +119,7 @@ class DefaultAttributesSchemaTest extends Specification {
         schema.attribute(attribute).compatibilityRules.add(BrokenRule)
 
         expect:
-        schema.mergeWith(EmptySchema.INSTANCE).matchValue(attribute, "a", "a")
+        new DefaultAttributeSelectionSchema(schema).matchValue(attribute, "a", "a")
 
         schema.matcher().isMatching(attribute, "a", "a")
     }
@@ -172,8 +172,8 @@ class DefaultAttributesSchemaTest extends Specification {
         def value2 = flavor('otherValue')
 
         expect:
-        schema.mergeWith(EmptySchema.INSTANCE).matchValue(attr, value1, value2)
-        !schema.mergeWith(EmptySchema.INSTANCE).matchValue(attr, value2, value1)
+        new DefaultAttributeSelectionSchema(schema).matchValue(attr, value1, value2)
+        !new DefaultAttributeSelectionSchema(schema).matchValue(attr, value2, value1)
 
         schema.matcher().isMatching(attr, value2, value1)
         !schema.matcher().isMatching(attr, value1, value2)
@@ -194,7 +194,7 @@ class DefaultAttributesSchemaTest extends Specification {
         schema.attribute(attr).compatibilityRules.add(BrokenRule)
 
         expect:
-        !schema.mergeWith(EmptySchema.INSTANCE).matchValue(attr, "a", "b")
+        !new DefaultAttributeSelectionSchema(schema).matchValue(attr, "a", "b")
 
         !schema.matcher().isMatching(attr, "a", "b")
     }
@@ -207,7 +207,7 @@ class DefaultAttributesSchemaTest extends Specification {
         def candidates = ["foo", "bar"] as Set
 
         when:
-        def best = schema.mergeWith(EmptySchema.INSTANCE).disambiguate(attr, "bar", candidates)
+        def best = new DefaultAttributeSelectionSchema(schema).disambiguate(attr, "bar", candidates)
 
         then:
         best == ["bar"] as Set
@@ -227,7 +227,7 @@ class DefaultAttributesSchemaTest extends Specification {
         def candidates = ["foo", "bar"] as Set
 
         when:
-        def best = schema.mergeWith(EmptySchema.INSTANCE).disambiguate(attr, "bar", candidates)
+        def best = new DefaultAttributeSelectionSchema(schema).disambiguate(attr, "bar", candidates)
 
         then:
         best == ["bar"] as Set
@@ -241,7 +241,7 @@ class DefaultAttributesSchemaTest extends Specification {
         def candidates = ["foo", "bar"] as Set
 
         when:
-        def best = schema.mergeWith(EmptySchema.INSTANCE).disambiguate(attr, "other", candidates)
+        def best = new DefaultAttributeSelectionSchema(schema).disambiguate(attr, "other", candidates)
 
         then:
         best == candidates
@@ -255,7 +255,7 @@ class DefaultAttributesSchemaTest extends Specification {
         def candidates = ["foo", "bar"] as Set
 
         when:
-        def best = schema.mergeWith(EmptySchema.INSTANCE).disambiguate(attr, "other", candidates)
+        def best = new DefaultAttributeSelectionSchema(schema).disambiguate(attr, "other", candidates)
 
         then:
         best == candidates
@@ -273,13 +273,13 @@ class DefaultAttributesSchemaTest extends Specification {
         def candidates = [value1, value2] as Set
 
         when:
-        def best= schema.mergeWith(EmptySchema.INSTANCE).disambiguate(attr, flavor('requested'), candidates)
+        def best= new DefaultAttributeSelectionSchema(schema).disambiguate(attr, flavor('requested'), candidates)
 
         then:
         best == [value1] as Set
 
         when:
-        best = schema.mergeWith(EmptySchema.INSTANCE).disambiguate(attr, value2, candidates)
+        best = new DefaultAttributeSelectionSchema(schema).disambiguate(attr, value2, candidates)
 
         then:
         best == [value1] as Set
@@ -298,7 +298,7 @@ class DefaultAttributesSchemaTest extends Specification {
         producer.attribute(attr3)
 
         expect:
-        def merged = schema.mergeWith(producer)
+        def merged = new DefaultAttributeSelectionSchema(schema, producer)
         merged.hasAttribute(attr1)
         merged.hasAttribute(attr2)
         merged.hasAttribute(attr3)
@@ -313,7 +313,7 @@ class DefaultAttributesSchemaTest extends Specification {
         producer.attribute(attr).compatibilityRules.add(CustomCompatibilityRule)
 
         expect:
-        def merged = schema.mergeWith(producer)
+        def merged = new DefaultAttributeSelectionSchema(schema, producer)
         merged.matchValue(attr, flavor('value'), flavor('otherValue'))
     }
 
@@ -331,7 +331,7 @@ class DefaultAttributesSchemaTest extends Specification {
         def candidates = [value1, value2] as Set
 
         when:
-        def best = schema.mergeWith(producer).disambiguate(attr, flavor('requested'), candidates)
+        def best = new DefaultAttributeSelectionSchema(schema, producer).disambiguate(attr, flavor('requested'), candidates)
 
         then:
         best == [value1] as Set
@@ -384,7 +384,7 @@ class DefaultAttributesSchemaTest extends Specification {
         )
 
         then:
-        def result = schema.mergeWith(producer).orderByPrecedence(requested)
+        def result = new DefaultAttributeSelectionSchema(schema, producer).orderByPrecedence(requested)
         result.sortedOrder == [2, 1, 0]
         result.unsortedOrder as List == [3]
     }
@@ -413,7 +413,7 @@ class DefaultAttributesSchemaTest extends Specification {
         )
 
         then:
-        def result = schema.mergeWith(producer).orderByPrecedence(requested)
+        def result = new DefaultAttributeSelectionSchema(schema, producer).orderByPrecedence(requested)
         result.sortedOrder == [1, 0, 2]
         result.unsortedOrder as List == [3]
     }
@@ -436,7 +436,7 @@ class DefaultAttributesSchemaTest extends Specification {
                 (Attribute.of("z", String)): "z"
         )
         expect:
-        def result = schema.mergeWith(EmptySchema.INSTANCE).orderByPrecedence(requested)
+        def result = new DefaultAttributeSelectionSchema(schema).orderByPrecedence(requested)
         result.sortedOrder == [2, 1]
         result.unsortedOrder as List == [0, 3]
     }
@@ -453,7 +453,7 @@ class DefaultAttributesSchemaTest extends Specification {
                 (Attribute.of("z", String)): "z"
         )
         expect:
-        def result = schema.mergeWith(EmptySchema.INSTANCE).orderByPrecedence(requested)
+        def result = new DefaultAttributeSelectionSchema(schema).orderByPrecedence(requested)
         result.sortedOrder == []
         result.unsortedOrder as List == [0, 1, 2, 3]
     }
@@ -472,7 +472,7 @@ class DefaultAttributesSchemaTest extends Specification {
                 (Attribute.of("z", String)): "z"
         )
         expect:
-        def result = schema.mergeWith(EmptySchema.INSTANCE).orderByPrecedence(requested)
+        def result = new DefaultAttributeSelectionSchema(schema).orderByPrecedence(requested)
         result.sortedOrder == []
         result.unsortedOrder as List == [0, 1, 2, 3]
     }
