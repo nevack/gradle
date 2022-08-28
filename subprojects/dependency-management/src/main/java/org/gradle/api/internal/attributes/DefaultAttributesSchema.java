@@ -44,9 +44,11 @@ public class DefaultAttributesSchema implements AttributesSchemaInternal {
     private final List<AttributeDescriber> consumerAttributeDescribers = new ArrayList<>();
     private final Set<Attribute<?>> precedence = new LinkedHashSet<>();
 
+    private final CachingAttributeSelectionSchema.Cache cache = new CachingAttributeSelectionSchema.Cache();
+
     public DefaultAttributesSchema(InstantiatorFactory instantiatorFactory, IsolatableFactory isolatableFactory) {
         this.instantiatorFactory = instantiatorFactory;
-        this.matcher = new ComponentAttributeMatcher(new DefaultAttributeSelectionSchema(this));
+        this.matcher = new ComponentAttributeMatcher(new CachingAttributeSelectionSchema(cache, new DefaultAttributeSelectionSchema(this, EmptySchema.INSTANCE)));
         this.isolatableFactory = isolatableFactory;
     }
 
@@ -90,7 +92,7 @@ public class DefaultAttributesSchema implements AttributesSchemaInternal {
 
     @Override
     public AttributeMatcher withProducer(AttributesSchemaInternal producerSchema) {
-        return new ComponentAttributeMatcher(new DefaultAttributeSelectionSchema(this, producerSchema));
+        return new ComponentAttributeMatcher(new CachingAttributeSelectionSchema(cache, new DefaultAttributeSelectionSchema(this, producerSchema)));
     }
 
     @Override

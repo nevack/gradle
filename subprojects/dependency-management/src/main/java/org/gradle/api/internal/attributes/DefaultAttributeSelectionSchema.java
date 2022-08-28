@@ -27,7 +27,6 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,8 +37,6 @@ import java.util.stream.IntStream;
 public class DefaultAttributeSelectionSchema implements AttributeSelectionSchema {
     private final AttributesSchemaInternal consumerSchema;
     private final AttributesSchemaInternal producerSchema;
-
-    private final Map<ExtraAttributesEntry, Attribute<?>[]> extraAttributesCache = new HashMap<>();
 
     public DefaultAttributeSelectionSchema(AttributesSchemaInternal schema) {
         this(schema, EmptySchema.INSTANCE);
@@ -128,21 +125,16 @@ public class DefaultAttributeSelectionSchema implements AttributeSelectionSchema
 
     @Override
     public Attribute<?>[] collectExtraAttributes(ImmutableAttributes[] candidateAttributeSets, ImmutableAttributes requested) {
-        // It's almost always the same attribute sets which are compared, so in order to avoid a lot of memory allocation
-        // during computation of the intersection, we cache the result here.
-        ExtraAttributesEntry entry = new ExtraAttributesEntry(candidateAttributeSets, requested);
-        return extraAttributesCache.computeIfAbsent(entry, key -> {
-            Set<String> requestedNames = requested.keySet().stream().map(Attribute::getName).collect(Collectors.toSet());
-            return Arrays.stream(candidateAttributeSets)
-                .flatMap(it -> it.keySet().stream())
-                .distinct()
-                .filter(it -> !requestedNames.contains(it.getName()))
-                // Some of these attributes might be weakly typed, e.g. coming as Strings from an
-                // artifact repository. We always check whether the schema has a more strongly typed
-                // version of an attribute and use that one instead to apply its disambiguation rules.
-                .map(it -> GUtil.elvis(this.getAttribute(it.getName()), it))
-                .toArray(Attribute<?>[]::new);
-        });
+        Set<String> requestedNames = requested.keySet().stream().map(Attribute::getName).collect(Collectors.toSet());
+        return Arrays.stream(candidateAttributeSets)
+            .flatMap(it -> it.keySet().stream())
+            .distinct()
+            .filter(it -> !requestedNames.contains(it.getName()))
+            // Some of these attributes might be weakly typed, e.g. coming as Strings from an
+            // artifact repository. We always check whether the schema has a more strongly typed
+            // version of an attribute and use that one instead to apply its disambiguation rules.
+            .map(it -> GUtil.elvis(this.getAttribute(it.getName()), it))
+            .toArray(Attribute<?>[]::new);
     }
 
     @Override
@@ -198,52 +190,5 @@ public class DefaultAttributeSelectionSchema implements AttributeSelectionSchema
     @Override
     public int hashCode() {
         return Objects.hashCode(consumerSchema, producerSchema);
-    }
-
-    /**
-     * A cache entry key, leveraging _identity_ as the key, because we do interning.
-     * This is a performance optimization.
-     */
-    private static class ExtraAttributesEntry {
-        private final ImmutableAttributes[] candidateAttributeSets;
-        private final ImmutableAttributes requestedAttributes;
-        private final int hashCode;
-
-        private ExtraAttributesEntry(ImmutableAttributes[] candidateAttributeSets, ImmutableAttributes requestedAttributes) {
-            this.candidateAttributeSets = candidateAttributeSets;
-            this.requestedAttributes = requestedAttributes;
-            int hash = Arrays.hashCode(candidateAttributeSets);
-            hash = 31 * hash + requestedAttributes.hashCode();
-            this.hashCode = hash;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-
-            ExtraAttributesEntry that = (ExtraAttributesEntry) o;
-            if (requestedAttributes != that.requestedAttributes) {
-                return false;
-            }
-            if (candidateAttributeSets.length != that.candidateAttributeSets.length) {
-                return false;
-            }
-            for (int i = 0; i < candidateAttributeSets.length; i++) {
-                if (candidateAttributeSets[i] != that.candidateAttributeSets[i]) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            return hashCode;
-        }
     }
 }
