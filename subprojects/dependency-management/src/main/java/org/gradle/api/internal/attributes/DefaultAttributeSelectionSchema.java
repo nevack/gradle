@@ -17,16 +17,16 @@
 package org.gradle.api.internal.attributes;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Sets;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.internal.component.model.AttributeSelectionSchema;
 import org.gradle.internal.component.model.DefaultCompatibilityCheckResult;
 import org.gradle.internal.component.model.DefaultMultipleCandidateResult;
-import org.gradle.util.internal.GUtil;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -123,18 +123,49 @@ public class DefaultAttributeSelectionSchema implements AttributeSelectionSchema
         return producerSchema.getAttributeByName(name);
     }
 
+//    @Override
+//    public Attribute<?>[] collectExtraAttributes(ImmutableAttributes[] candidateAttributeSets, ImmutableAttributes requested) {
+//        Set<String> requestedNames = requested.keySet().stream().map(Attribute::getName).collect(Collectors.toSet());
+//        return Arrays.stream(candidateAttributeSets)
+//            .flatMap(it -> it.keySet().stream())
+//            .distinct()
+//            .filter(it -> !requestedNames.contains(it.getName()))
+//            // Some of these attributes might be weakly typed, e.g. coming as Strings from an
+//            // artifact repository. We always check whether the schema has a more strongly typed
+//            // version of an attribute and use that one instead to apply its disambiguation rules.
+//            .map(it -> GUtil.elvis(this.getAttribute(it.getName()), it))
+//            .toArray(Attribute<?>[]::new);
+//    }
+
     @Override
-    public Attribute<?>[] collectExtraAttributes(ImmutableAttributes[] candidateAttributeSets, ImmutableAttributes requested) {
-        Set<String> requestedNames = requested.keySet().stream().map(Attribute::getName).collect(Collectors.toSet());
-        return Arrays.stream(candidateAttributeSets)
-            .flatMap(it -> it.keySet().stream())
-            .distinct()
-            .filter(it -> !requestedNames.contains(it.getName()))
-            // Some of these attributes might be weakly typed, e.g. coming as Strings from an
-            // artifact repository. We always check whether the schema has a more strongly typed
-            // version of an attribute and use that one instead to apply its disambiguation rules.
-            .map(it -> GUtil.elvis(this.getAttribute(it.getName()), it))
-            .toArray(Attribute<?>[]::new);
+    public  Attribute<?>[] collectExtraAttributes(ImmutableAttributes[] candidateAttributeSets, ImmutableAttributes requested) {
+        Set<Attribute<?>> extraAttributes = Sets.newLinkedHashSet();
+        for (ImmutableAttributes attributes : candidateAttributeSets) {
+            extraAttributes.addAll(attributes.keySet());
+        }
+        removeSameAttributes(requested, extraAttributes);
+        Attribute<?>[] extraAttributesArray = extraAttributes.toArray(new Attribute<?>[0]);
+        for (int i = 0; i < extraAttributesArray.length; i++) {
+            Attribute<?> extraAttribute = extraAttributesArray[i];
+            Attribute<?> schemaAttribute = getAttribute(extraAttribute.getName());
+            if (schemaAttribute != null) {
+                extraAttributesArray[i] = schemaAttribute;
+            }
+        }
+        return extraAttributesArray;
+    }
+
+    private static void removeSameAttributes(ImmutableAttributes requested, Set<Attribute<?>> extraAttributes) {
+        for (Attribute<?> attribute : requested.keySet()) {
+            Iterator<Attribute<?>> it = extraAttributes.iterator();
+            while (it.hasNext()) {
+                Attribute<?> next = it.next();
+                if (next.getName().equals(attribute.getName())) {
+                    it.remove();
+                    break;
+                }
+            }
+        }
     }
 
     @Override
