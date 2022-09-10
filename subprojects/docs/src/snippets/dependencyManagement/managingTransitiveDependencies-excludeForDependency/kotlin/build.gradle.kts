@@ -37,7 +37,8 @@ dependencies {
 }
 
 tasks.register("printArtifacts") {
+    val classpath: FileCollection = configurations["runtimeClasspath"]
     doLast {
-        configurations["runtimeClasspath"].forEach { println(it.name) }
+        classpath.forEach { println(it.name) }
     }
 }
